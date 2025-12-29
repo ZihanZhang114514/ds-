@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡哇伊小男娘提示词生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #ffccff 0%, #ccffff 100%);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 3px dashed #ff99cc;
+        }
+
+        h1 {
+            color: #ff6699;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+
+        .input-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            margin-right: 20px;
+            margin-bottom: 20px;
+        }
+
+        .output-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            border: 2px dashed #e0e0e0;
+        }
+
+        h2 {
+            color: #ff6699;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ffccff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #ff99cc;
+        }
+
+        button {
+            background: linear-gradient(to right, #ff99cc, #ff6699);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 102, 153, 0.3);
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .copy-btn {
+            background: linear-gradient(to right, #66ccff, #3399ff);
+            width: auto;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            margin-top: 0;
+        }
+
+        .copy-btn:hover {
+            background: linear-gradient(to right, #3399ff, #0066cc);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(51, 153, 255, 0.3);
+        }
+
+        .copy-btn.copied {
+            background: linear-gradient(to right, #66ff99, #00cc66);
+        }
+
+        .copy-btn.copied:hover {
+            background: linear-gradient(to right, #00cc66, #009933);
+        }
+
+        .box {
+            background-color: #f0f8ff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 10px;
+            white-space: pre-line;
+            line-height: 1.8;
+            border: 1px solid #e0f0ff;
+            min-height: 300px;
+            font-family: monospace;
+            position: relative;
+            overflow: auto;
+        }
+
+        .character-info {
+            color: #555;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .character-info p {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            color: #ff6699;
+            font-weight: bold;
+        }
+
+        .tip {
+            background-color: #fff0f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+            border-left: 4px solid #ff99cc;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #66ff99;
+            color: #006600;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .input-section {
+                margin-right: 0;
+            }
+
+            .output-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .copy-btn {
+                margin-top: 10px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>卡哇伊小男娘提示词生成器</h1>
+            <p class="subtitle">自定义角色特征，生成专属的AI角色扮演提示词</p>
+        </header>
+
+        <div class="content">
+            <div class="input-section">
+                <h2>角色信息设置</h2>
+                <div class="form-group">
+                    <label for="name">角色的名字：</label>
+                    <input type="text" id="name" placeholder="例如：晨逸">
+                </div>
+
+                <div class="form-group">
+                    <label for="callName">你希望用户怎样称呼你：</label>
+                    <input type="text" id="callName" placeholder="例如：哥哥">
+                </div>
+
+                <div class="form-group">
+                    <label for="weakness">角色的弱点（如腰部）：</label>
+                    <input type="text" id="weakness" placeholder="例如：腰部">
+                </div>
+
+                <div class="form-group">
+                    <label for="specialty">角色的特长（如乐高）：</label>
+                    <input type="text" id="specialty" placeholder="例如：乐高">
+                </div>
+
+                <button onclick="generatePrompt()">生成提示词</button>
+
+                <div class="tip">
+                    <strong>使用说明：</strong> 填写以上信息后点击"生成提示词"，右侧将生成适用于AI角色扮演的完整提示词。点击"复制提示词"按钮可一键复制到剪贴板。
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <h2>生成的提示词</h2>
+                    <button class="copy-btn" id="copyButton" onclick="copyPrompt()">📋 复制提示词</button>
+                </div>
+
+                <div class="character-info">
+                    <p>填写左侧信息并点击生成按钮，这里将显示完整的角色提示词。</p>
+                    <p>生成的提示词包含角色的完整设定，可直接用于AI对话。</p>
+                </div>
+                <div class="box" id="outputBox">
+                    等待生成提示词...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 复制成功提示 -->
+    <div class="toast" id="toast">✅ 提示词已复制到剪贴板！</div>
+
+    <script>
+        let currentPrompt = "";
+
+        function generatePrompt() {
+            // 获取用户输入的值
+            const name = document.getElementById('name').value.trim() || "晨逸";
+            const callName = document.getElementById('callName').value.trim() || "哥哥";
+            const weakness = document.getElementById('weakness').value.trim() || "腰部";
+            const specialty = document.getElementById('specialty').value.trim() || "乐高";
+
+            // 生成完整的提示词
+            const prompt = `名字：${name}
+性别：男
+年龄：12岁
+身份：初中一年级学生
+性格：善良、活泼
+背景：暑假，父母出差，独自在家
+与用户关系：是用户的弟弟
+核心主题：亲情羁绊
+人格特征：性格柔软易害羞（受型人格）
+习惯性关心他人
+外貌特征：身高155cm／体重36kg
+肤色白皙体型纤细
+穿着特征：袖口盖过手背
+裤脚堆叠在脚踝
+语言特征：对话中自然使用拟声词
+用户称呼：${callName}
+特长：${specialty}
+喜欢：酸奶
+讨厌：苦瓜
+弱点：${weakness}
+每次输出字数不超过30字
+使用（）进行描述
+禁止转移话题
+你的第一句话是："${callName}，能和我玩吗？"`;
+
+            // 保存当前提示词（用于复制）
+            currentPrompt = prompt;
+
+            // 显示生成的提示词（带高亮效果）
+            const outputBox = document.getElementById('outputBox');
+            outputBox.innerHTML = prompt
+                .replace(/(名字：|用户称呼：|特长：|弱点：)/g, '<span class="highlight">$1</span>');
+
+            // 启用复制按钮
+            document.getElementById('copyButton').disabled = false;
+        }
+
+        function copyPrompt() {
+            if (!currentPrompt) {
+                showToast("请先生成提示词！", "error");
+                return;
+            }
+
+            // 使用现代剪贴板API
+            navigator.clipboard.writeText(currentPrompt)
+                .then(() => {
+                    // 显示成功提示
+                    showToast("✅ 提示词已复制到剪贴板！");
+
+                    // 改变按钮状态
+                    const copyButton = document.getElementById('copyButton');
+                    const originalText = copyButton.innerHTML;
+                    copyButton.innerHTML = "✅ 已复制！";
+                    copyButton.classList.add('copied');
+
+                    // 2秒后恢复按钮状态
+                    setTimeout(() => {
+                        copyButton.innerHTML = originalText;
+                        copyButton.classList.remove('copied');
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('复制失败: ', err);
+
+                    // 降级方案：使用旧式复制方法
+                    const textArea = document.createElement('textarea');
+                    textArea.value = currentPrompt;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            showToast("✅ 提示词已复制到剪贴板！");
+                        } else {
+                            showToast("❌ 复制失败，请手动复制", "error");
+                        }
+                    } catch (err) {
+                        console.error('降级复制也失败: ', err);
+                        showToast("❌ 复制失败，请手动复制文本", "error");
+                    }
+
+                    document.body.removeChild(textArea);
+                });
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+
+            // 设置消息和样式
+            toast.innerHTML = message;
+            if (type === "error") {
+                toast.style.backgroundColor = "#ff9999";
+                toast.style.color = "#990000";
+            } else {
+                toast.style.backgroundColor = "#66ff99";
+                toast.style.color = "#006600";
+            }
+
+            // 显示toast
+            toast.classList.add('show');
+
+            // 3秒后隐藏
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 页面加载时显示默认提示词
+        window.onload = function () {
+            // 设置默认值
+            document.getElementById('name').value = "晨逸";
+            document.getElementById('callName').value = "哥哥";
+            document.getElementById('weakness').value = "腰部";
+            document.getElementById('specialty').value = "乐高";
+
+            // 生成默认提示词
+            generatePrompt();
+        };
+    </script>
+</body>
+
+</html>
